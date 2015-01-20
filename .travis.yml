@@ -1,0 +1,35 @@
+language: node_js
+node_js:
+  - "0.10"
+env:
+  - NODE_ENV=travis
+branches:
+  except:
+    - /-nobuild$/
+cache:
+  apt : true
+
+notifications:
+  email:
+    - siddharth.deshpande@capita.co.uk
+before_install:
+ - chmod +x ./*.sh
+ - export COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
+ - export REPOSITORY_NAME=$(echo $TRAVIS_REPO_SLUG | gawk -F/ '{print $2}')
+ - npm install npm@latest -g
+ - bash ./setupNpmrc.sh
+
+install:
+ - echo $COMMIT_MESSAGE
+ - npm cache clean
+ - npm install
+ - npm install -g gulp
+ - gulp build
+ - cd _release/webClient
+ - npm install --production
+ - cd ../..
+before_script:
+  - "export DISPLAY=:99.0"
+  - node ._release/server.js > /dev/null 2>&1 &
+after_success:
+ - bash ./deploy.sh
